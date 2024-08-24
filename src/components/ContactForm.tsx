@@ -1,11 +1,22 @@
-import { FC, useState } from "react";
+import React, { FC, useState } from "react";
 import { Button, Form } from "react-bootstrap";
+import { Action, Contact } from "../contactsReducer";
 
-const ContactForm: FC = () => {
+interface ContactFormProps {
+  dispatch: React.Dispatch<Action>;
+  toggleModal?: () => void;
+  dataToEdit?: Contact | undefined;
+}
+
+const ContactForm: FC<ContactFormProps> = ({
+  dispatch,
+  dataToEdit,
+  toggleModal,
+}) => {
   const [contact, setContact] = useState({
-    firstName: "",
-    lastName: "",
-    phone: "",
+    firstName: dataToEdit?.firstName ? dataToEdit.firstName : "",
+    lastName: dataToEdit?.lastName ? dataToEdit.lastName : "",
+    phone: dataToEdit?.phone ? dataToEdit.phone : "",
   });
 
   const handleOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -20,7 +31,34 @@ const ContactForm: FC = () => {
 
   const hanldeOnSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log(contact);
+    if (!dataToEdit) {
+      dispatch({
+        type: "ADD_CONTACT",
+        payload: {
+          id: Date.now(),
+          ...contact,
+        },
+      });
+      setContact({
+        firstName: '',
+        lastName: '',
+        phone: ''
+      })
+    } else {
+      dispatch({
+        type: 'UPDATE_CONTACT',
+        payload: {
+          id: dataToEdit.id,
+          updates: {
+            id: Date.now(),
+            ...contact
+          }
+        }
+      })
+      if (toggleModal) {
+        toggleModal();
+      }
+    }
   };
 
   return (
@@ -56,8 +94,8 @@ const ContactForm: FC = () => {
         />
       </Form.Group>
       <Form.Group controlId="email">
-        <Button variant="primary" className="submit-btn" type="submit">
-          Add Contact
+        <Button variant="primary" type="submit" className="submit-btn">
+          {dataToEdit ? "Update Contact" : "Add Contact"}
         </Button>
       </Form.Group>
     </Form>
